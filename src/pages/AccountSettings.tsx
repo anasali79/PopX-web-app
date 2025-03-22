@@ -2,18 +2,37 @@
 import { useNavigate } from "react-router-dom";
 import { Camera } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useUser } from "@/context/UserContext";
+import { useEffect } from "react";
 
 const AccountSettings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, logout, isAuthenticated } = useUser();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/login");
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleLogout = () => {
+    logout();
     toast({
       title: "Logged out successfully",
       description: "See you soon!",
     });
     navigate("/");
   };
+
+  // If not authenticated or no user, show loading
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-light">
+        <div className="animate-pulse text-purple">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-light page-transition">
@@ -25,11 +44,9 @@ const AccountSettings = () => {
         <div className="p-5 flex items-center border-b border-dashed border-gray-200">
           <div className="relative">
             <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200">
-              <img 
-                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80" 
-                alt="Profile" 
-                className="w-full h-full object-cover"
-              />
+              <div className="w-full h-full flex items-center justify-center bg-purple/20 text-purple font-bold text-xl">
+                {user.fullName.charAt(0).toUpperCase()}
+              </div>
             </div>
             <div className="absolute -bottom-1 -right-1 bg-purple rounded-full p-1.5 text-white">
               <Camera size={16} />
@@ -37,13 +54,26 @@ const AccountSettings = () => {
           </div>
           
           <div className="ml-5">
-            <h2 className="font-semibold text-lg">Marry Doe</h2>
-            <p className="text-gray">Marry@Gmail.Com</p>
+            <h2 className="font-semibold text-lg">{user.fullName}</h2>
+            <p className="text-gray">{user.email}</p>
+            {user.phoneNumber && (
+              <p className="text-gray text-sm">{user.phoneNumber}</p>
+            )}
           </div>
         </div>
         
         <div className="p-5 border-b border-dashed border-gray-200">
-          <p className="text-gray-dark leading-relaxed">
+          {user.companyName && (
+            <div className="mb-3">
+              <h3 className="font-semibold">Company</h3>
+              <p className="text-gray-dark">{user.companyName}</p>
+            </div>
+          )}
+          <div className="mb-3">
+            <h3 className="font-semibold">Agency</h3>
+            <p className="text-gray-dark">{user.isAgency}</p>
+          </div>
+          <p className="text-gray-dark leading-relaxed mt-3">
             Lorem Ipsum Dolor Sit Amet, Consetetur Sadipscing Elitr, Sed Diam Nonumy Eirmod Tempor Invidunt Ut Labore Et Dolore Magna Aliquyam Erat, Sed Diam
           </p>
         </div>

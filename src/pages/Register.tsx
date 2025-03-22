@@ -4,6 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import AuthLayout from "@/components/AuthLayout";
 import FormInput from "@/components/FormInput";
 import { useToast } from "@/components/ui/use-toast";
+import { useUser } from "@/context/UserContext";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -17,6 +18,7 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login } = useUser();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
@@ -32,10 +34,20 @@ const Register = () => {
     
     // Simulate registration process
     setTimeout(() => {
+      // Register and login the user with form data
+      login({
+        fullName: formData.fullName,
+        phoneNumber: formData.phoneNumber,
+        email: formData.email,
+        companyName: formData.companyName,
+        isAgency: formData.isAgency,
+      });
+      
       toast({
         title: "Account created successfully",
         description: "Welcome to PopX!",
       });
+      
       setIsLoading(false);
       navigate("/account");
     }, 1500);

@@ -1,30 +1,66 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import AuthLayout from "@/components/AuthLayout";
 import FormInput from "@/components/FormInput";
 import { useToast } from "@/components/ui/use-toast";
+import { useUser } from "@/context/UserContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login, isAuthenticated } = useUser();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/account");
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
     
-    // Simulate login process
-    setTimeout(() => {
-      toast({
-        title: "Login successful",
-        description: "Welcome back to PopX!",
-      });
+    // Check if the user exists in localStorage by email
+    const storedUser = localStorage.getItem("popx_user");
+    
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
+      
+      if (userData.email === email) {
+        // In a real app, you would validate the password here
+        setTimeout(() => {
+          login(userData);
+          toast({
+            title: "Login successful",
+            description: "Welcome back to PopX!",
+          });
+          setIsLoading(false);
+          navigate("/account");
+        }, 1000);
+      } else {
+        setIsLoading(false);
+        setError("Invalid email or password");
+        toast({
+          title: "Login failed",
+          description: "Invalid email or password",
+          variant: "destructive",
+        });
+      }
+    } else {
       setIsLoading(false);
-      navigate("/account");
-    }, 1500);
+      setError("No account found with this email");
+      toast({
+        title: "Login failed",
+        description: "No account found with this email",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -58,10 +94,14 @@ const Login = () => {
             required
           />
 
+          {error && (
+            <div className="text-red-500 text-sm mt-2">{error}</div>
+          )}
+
           <div className="pt-4">
             <button
               type="submit"
-              className="w-full py-3 bg-gray-300 text-white font-medium rounded-md hover:bg-gray-400 transition-all duration-200 animate-slide-up"
+              className="w-full py-3 bg-purple text-white font-medium rounded-md hover:bg-purple/90 transition-all duration-200 animate-slide-up"
               disabled={isLoading}
             >
               {isLoading ? "Signing in..." : "Login"}
