@@ -35,4 +35,4 @@ This project is built with:
 
 ## Deployment
 
-You can deploy this project to any static hosting service like Netlify, Vercel, or GitHub Pages.
+You use Vercel on deployment 
