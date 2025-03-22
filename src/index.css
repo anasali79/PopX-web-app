@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -97,5 +98,36 @@
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .card-container {
+    @apply max-w-md w-full mx-auto bg-white rounded-none border border-gray-200 overflow-hidden shadow-sm;
+  }
+  
+  .form-input {
+    @apply w-full px-4 py-3 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple transition-all duration-200;
+  }
+  
+  .primary-button {
+    @apply w-full py-3 px-4 bg-purple text-white font-medium rounded-md hover:bg-purple-dark transition-all duration-200 disabled:opacity-70;
+  }
+  
+  .secondary-button {
+    @apply w-full py-3 px-4 bg-purple-light text-gray-dark font-medium rounded-md hover:bg-opacity-90 transition-all duration-200;
+  }
+  
+  .form-label {
+    @apply text-purple font-medium text-sm mb-1 block;
+  }
+
+  .page-transition {
+    @apply animate-fade-in;
+  }
+  
+  .input-transition {
+    @apply transition-all duration-200 focus:translate-y-0 hover:-translate-y-0.5;
   }
 }
