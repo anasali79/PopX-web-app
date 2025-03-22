@@ -26,38 +26,39 @@ const Login = () => {
     setIsLoading(true);
     setError("");
     
-    // Check if the user exists in localStorage by email
-    const storedUser = localStorage.getItem("popx_user");
-    
-    if (storedUser) {
-      const userData = JSON.parse(storedUser);
+    try {
+      // Get all items from localStorage
+      const userData = localStorage.getItem("popx_user");
       
-      if (userData.email === email) {
-        // In a real app, you would validate the password here
-        setTimeout(() => {
-          login(userData);
+      if (userData) {
+        const parsedUserData = JSON.parse(userData);
+        
+        // Check if the email matches
+        if (parsedUserData.email === email) {
+          // Login successful
+          login(parsedUserData);
+          
           toast({
             title: "Login successful",
             description: "Welcome back to PopX!",
           });
+          
           setIsLoading(false);
           navigate("/account");
-        }, 1000);
+        } else {
+          throw new Error("Invalid email or password");
+        }
       } else {
-        setIsLoading(false);
-        setError("Invalid email or password");
-        toast({
-          title: "Login failed",
-          description: "Invalid email or password",
-          variant: "destructive",
-        });
+        throw new Error("No registered account found");
       }
-    } else {
+    } catch (err) {
       setIsLoading(false);
-      setError("No account found with this email");
+      const errorMessage = err instanceof Error ? err.message : "Login failed";
+      setError(errorMessage);
+      
       toast({
         title: "Login failed",
-        description: "No account found with this email",
+        description: errorMessage,
         variant: "destructive",
       });
     }
