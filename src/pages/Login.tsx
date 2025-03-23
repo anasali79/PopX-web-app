@@ -29,9 +29,11 @@ const Login = () => {
     setError("");
     
     try {
+      console.log("Attempting login with:", email);
       await login(email, password);
       // Navigation is handled in the useEffect when isAuthenticated changes
     } catch (err) {
+      console.error("Login error:", err);
       const errorMessage = err instanceof Error ? err.message : "Login failed";
       setError(errorMessage);
     } finally {

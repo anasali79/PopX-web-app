@@ -11,8 +11,19 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
+    storage: typeof window !== 'undefined' ? localStorage : undefined
   }
 });
+
+// Custom type for profile data that we use in our application
+export type ProfileType = {
+  id: string;
+  full_name: string | null;
+  phone_number: string | null;
+  company_name: string | null;
+  is_agency: string | null;
+  created_at: string;
+  updated_at: string;
+};

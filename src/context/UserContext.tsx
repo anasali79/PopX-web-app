@@ -1,5 +1,6 @@
+
 import React, { createContext, useState, useContext, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, ProfileType } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -55,11 +56,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
               }
             } else if (data) {
               setProfile({
-                fullName: data.full_name,
+                fullName: data.full_name || '',
                 email: currentSession.user.email || '',
-                phoneNumber: data.phone_number,
-                companyName: data.company_name,
-                isAgency: data.is_agency
+                phoneNumber: data.phone_number || '',
+                companyName: data.company_name || '',
+                isAgency: data.is_agency || ''
               });
             }
           } catch (err) {
@@ -93,11 +94,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
               }
             } else if (data) {
               setProfile({
-                fullName: data.full_name,
+                fullName: data.full_name || '',
                 email: currentSession.user.email || '',
-                phoneNumber: data.phone_number,
-                companyName: data.company_name,
-                isAgency: data.is_agency
+                phoneNumber: data.phone_number || '',
+                companyName: data.company_name || '',
+                isAgency: data.is_agency || ''
               });
             }
             setIsLoading(false);
