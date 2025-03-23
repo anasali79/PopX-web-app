@@ -118,25 +118,49 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       
+      console.log("Starting signup process for:", email);
+      
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        console.error("Auth error during signup:", authError);
+        throw authError;
+      }
+
+      console.log("Auth signup successful, user created:", authData.user?.id);
 
       if (authData.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: authData.user.id,
-            full_name: userData.fullName,
-            phone_number: userData.phoneNumber,
-            company_name: userData.companyName,
-            is_agency: userData.isAgency
-          });
+        // Create profile with proper error handling
+        try {
+          console.log("Attempting to create profile for user:", authData.user.id);
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: authData.user.id,
+              full_name: userData.fullName,
+              phone_number: userData.phoneNumber,
+              company_name: userData.companyName,
+              is_agency: userData.isAgency
+            });
 
-        if (profileError) throw profileError;
+          if (profileError) {
+            console.error("Profile creation error:", profileError);
+            // Don't throw here, just log the error
+            toast({
+              title: "Profile creation issue",
+              description: "Your account was created but there was an issue with your profile. Some features may be limited.",
+              variant: "destructive",
+            });
+          } else {
+            console.log("Profile created successfully");
+          }
+        } catch (profileCreationError) {
+          console.error("Unexpected error during profile creation:", profileCreationError);
+          // Don't throw here either, just log the error
+        }
 
         setProfile(userData);
         setUser(authData.user);
@@ -157,6 +181,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         variant: "destructive",
       });
       console.error("Signup error:", error);
+      throw error;
     } finally {
       setIsLoading(false);
     }

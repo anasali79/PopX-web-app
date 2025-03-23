@@ -34,6 +34,14 @@ const Register = () => {
     setIsLoading(true);
     setError("");
     
+    console.log("Submitting registration form with data:", { 
+      email: formData.email, 
+      fullName: formData.fullName,
+      phoneNumber: formData.phoneNumber,
+      companyName: formData.companyName,
+      isAgency: formData.isAgency
+    });
+    
     try {
       await signup(formData.email, formData.password, {
         fullName: formData.fullName,
@@ -43,8 +51,10 @@ const Register = () => {
         isAgency: formData.isAgency,
       });
       
+      console.log("Signup successful, navigating to account page");
       navigate("/account");
     } catch (err) {
+      console.error("Registration error:", err);
       const errorMessage = err instanceof Error ? err.message : "Registration failed";
       setError(errorMessage);
       
