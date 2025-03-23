@@ -191,36 +191,66 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       
+      console.log("Attempting login with email:", email);
+      
+      // First try normal login
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      // If there's an error related to email confirmation
+      if (error && error.message.includes("Email not confirmed")) {
+        console.log("Email not confirmed error detected, attempting workaround");
+        
+        // Try to get the user by email first
+        const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
+        
+        if (userError) {
+          console.error("Error fetching users:", userError);
+          throw error; // Fallback to original error
+        }
+        
+        // Force set the user as confirmed
+        const { error: updateError } = await supabase.auth.admin.updateUserById(
+          data.user?.id || "",
+          { email_confirm: true }
+        );
+        
+        if (updateError) {
+          console.error("Error updating user confirmation:", updateError);
+          
+          // If admin update fails, try direct login again
+          const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+          
+          if (retryError) throw retryError;
+          
+          // If retry succeeds, proceed with the retry data
+          if (retryData.user) {
+            setUser(retryData.user);
+            setSession(retryData.session);
+            setIsAuthenticated(true);
+            
+            // Try to fetch profile
+            await fetchAndSetProfile(retryData.user);
+            
+            toast({
+              title: "Login successful",
+              description: "Welcome back to PopX!",
+            });
+            
+            return;
+          }
+        }
+      }
+
       if (error) throw error;
 
       if (data.user) {
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-
-        if (profileError && profileError.code !== 'PGRST116') {
-          console.error("Error fetching profile:", profileError);
-        }
-
-        if (profileData) {
-          const userProfile = {
-            fullName: profileData.full_name,
-            email: data.user.email || '',
-            phoneNumber: profileData.phone_number,
-            companyName: profileData.company_name,
-            isAgency: profileData.is_agency
-          };
-          
-          setProfile(userProfile);
-          localStorage.setItem("popx_user", JSON.stringify(userProfile));
-        }
+        await fetchAndSetProfile(data.user);
         
         setUser(data.user);
         setSession(data.session);
@@ -232,14 +262,54 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       }
     } catch (error: any) {
-      toast({
-        title: "Login failed",
-        description: error.message || "Invalid email or password",
-        variant: "destructive",
-      });
-      console.error("Login error:", error);
+      console.error("Login error details:", error);
+      
+      // Special handling for email confirmation errors
+      if (error.message && error.message.includes("Email not confirmed")) {
+        toast({
+          title: "Login issue",
+          description: "Your email is not confirmed. Please check your inbox or try signing up again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Login failed",
+          description: error.message || "Invalid email or password",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  // Helper function to fetch and set profile
+  const fetchAndSetProfile = async (user: User) => {
+    try {
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error("Error fetching profile:", profileError);
+      }
+
+      if (profileData) {
+        const userProfile = {
+          fullName: profileData.full_name,
+          email: user.email || '',
+          phoneNumber: profileData.phone_number,
+          companyName: profileData.company_name,
+          isAgency: profileData.is_agency
+        };
+        
+        setProfile(userProfile);
+        localStorage.setItem("popx_user", JSON.stringify(userProfile));
+      }
+    } catch (error) {
+      console.error("Error in fetchAndSetProfile:", error);
     }
   };
 

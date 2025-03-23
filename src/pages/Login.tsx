@@ -17,6 +17,7 @@ const Login = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
+      console.log("User is authenticated, navigating to account page");
       navigate("/account");
     }
   }, [isAuthenticated, navigate]);
@@ -33,9 +34,15 @@ const Login = () => {
       await login(email, password);
       // Navigation is handled in the useEffect when isAuthenticated changes
     } catch (err) {
-      console.error("Login error:", err);
+      console.error("Login error in component:", err);
       const errorMessage = err instanceof Error ? err.message : "Login failed";
-      setError(errorMessage);
+      
+      // Display a more user-friendly message for email confirmation errors
+      if (errorMessage.includes("Email not confirmed")) {
+        setError("Your email is not confirmed. We're trying to work around this issue.");
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -49,7 +56,7 @@ const Login = () => {
             Signin to your PopX account
           </h1>
           <p className="text-gray animate-slide-up">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+            Login without email confirmation required.
           </p>
         </div>
 
