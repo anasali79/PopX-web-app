@@ -16,9 +16,10 @@ const Register = () => {
     isAgency: "Yes",
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { login } = useUser();
+  const { signup, isAuthenticated } = useUser();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
@@ -28,14 +29,13 @@ const Register = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
     
-    // Simulate registration process
-    setTimeout(() => {
-      // Register and login the user with form data
-      login({
+    try {
+      await signup(formData.email, formData.password, {
         fullName: formData.fullName,
         phoneNumber: formData.phoneNumber,
         email: formData.email,
@@ -43,14 +43,19 @@ const Register = () => {
         isAgency: formData.isAgency,
       });
       
-      toast({
-        title: "Account created successfully",
-        description: "Welcome to PopX!",
-      });
-      
-      setIsLoading(false);
       navigate("/account");
-    }, 1500);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Registration failed";
+      setError(errorMessage);
+      
+      toast({
+        title: "Registration failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -142,10 +147,14 @@ const Register = () => {
             </div>
           </div>
 
+          {error && (
+            <div className="text-red-500 text-sm mt-2">{error}</div>
+          )}
+
           <div className="pt-4">
             <button
               type="submit"
-              className="primary-button animate-slide-up"
+              className="w-full py-3 bg-purple text-white font-medium rounded-md hover:bg-purple/90 transition-all duration-200 animate-slide-up"
               disabled={isLoading}
             >
               {isLoading ? "Creating Account..." : "Create Account"}

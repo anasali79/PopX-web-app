@@ -13,7 +13,7 @@ const Login = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { login, isAuthenticated } = useUser();
+  const { login, isAuthenticated, isLoading: authLoading } = useUser();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -21,46 +21,21 @@ const Login = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (authLoading) return;
+    
     setIsLoading(true);
     setError("");
     
     try {
-      // Get all items from localStorage
-      const userData = localStorage.getItem("popx_user");
-      
-      if (userData) {
-        const parsedUserData = JSON.parse(userData);
-        
-        // Check if the email matches
-        if (parsedUserData.email === email) {
-          // Login successful
-          login(parsedUserData);
-          
-          toast({
-            title: "Login successful",
-            description: "Welcome back to PopX!",
-          });
-          
-          setIsLoading(false);
-          navigate("/account");
-        } else {
-          throw new Error("Invalid email or password");
-        }
-      } else {
-        throw new Error("No registered account found");
-      }
+      await login(email, password);
+      // Navigation is handled in the useEffect when isAuthenticated changes
     } catch (err) {
-      setIsLoading(false);
       const errorMessage = err instanceof Error ? err.message : "Login failed";
       setError(errorMessage);
-      
-      toast({
-        title: "Login failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -103,9 +78,9 @@ const Login = () => {
             <button
               type="submit"
               className="w-full py-3 bg-purple text-white font-medium rounded-md hover:bg-purple/90 transition-all duration-200 animate-slide-up"
-              disabled={isLoading}
+              disabled={isLoading || authLoading}
             >
-              {isLoading ? "Signing in..." : "Login"}
+              {isLoading || authLoading ? "Signing in..." : "Login"}
             </button>
           </div>
           
